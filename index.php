@@ -3,16 +3,16 @@
 
 // Define a helper function to load views
 function renderView($viewName) {
-    $viewFile = __DIR__ . "/public/{$viewName}.html";
+    $viewFile = __DIR__ . "/public/{$viewName}.php";
     if (file_exists($viewFile)) {
         include $viewFile;
     } else {
-        include __DIR__ . "/public/404.html";
+        include __DIR__ . "/public/404.php";
     }
 }
 
 // Parse the requested path
-$request = $_GET['page'] ?? 'home';
+$request = $_GET['page'] ?? 'login';
 
 renderView($request);
 
