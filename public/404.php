@@ -6,6 +6,11 @@
     <title>Not Found</title>
 </head>
 <body>
-    404 - Not found
+    <h1>
+        404
+    </h1>
+    <h2>
+        Page not found... 
+    </h2>
 </body>
 </html>
