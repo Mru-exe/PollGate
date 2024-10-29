@@ -7,7 +7,7 @@ function renderView($viewName) {
     if (file_exists($viewFile)) {
         include $viewFile;
     } else {
-        include __DIR__ . "/public/404.php";
+        include __DIR__ . "/public/404.html";
     }
 }
 
