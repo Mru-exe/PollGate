@@ -1,5 +1,4 @@
 # .htaccess
-RewriteEngine On
 
-# Rewrite all requests to index.php
-RewriteRule ^(.*)$ index.php [QSA,L]
+ErrorDocument 404 /~kindlma7/PollGate/public/404.php
+ErrorDocument 403 /~kindlma7/PollGate/public/404.php
