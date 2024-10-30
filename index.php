@@ -1,19 +1,23 @@
 <?php
-//Function will serve view based on the URI path
-function renderView($viewName) {
-    $viewFile = __DIR__ . "/public/{$viewName}.php";
-    if (file_exists($viewFile)) {
-        include $viewFile;
+    session_start();
+
+    if(isset($_SESSION['token']) && isset($_SESSION['user_id'])){
+        echo "logged in with token: " . $_SESSION['token'] . " | " . $_SESSION['user_id'];
     } else {
-        include __DIR__ . "/public/404.php";
+        session_unset();
+        session_destroy();
     }
-}
-
-// Parse the requested path
-$request = $_SERVER['REQUEST_URI'];
-$request = str_replace('/~kindlma7/PollGate/', '', $request);
-$request = strlen($request) == 0 ? 'login' : $request;
-
-renderView($request);
 
 ?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    Index
+</body>
+</html>
