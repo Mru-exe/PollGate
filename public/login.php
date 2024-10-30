@@ -1,3 +1,10 @@
+<?php 
+
+include '../src/config/_cbcontext.php';
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
