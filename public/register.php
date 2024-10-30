@@ -1,7 +1,4 @@
 <?php
-// Initialize an array to hold any registration data (or errors for display)
-$messages = [];
-
 // Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -39,7 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Registration Form</title>
+    <link rel="icon" type="image/x-icon" href="/public/assets/img/favicon.ico">
+    <title>Register</title>
 </head>
 <body>
     <h2>Register</h2>
