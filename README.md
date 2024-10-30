@@ -1,5 +1,5 @@
 # PollGate
-PollGate semestral project @ CTU
+PollGate semestral project @ CTU FEE
 
 DB Diagram:
 ```
