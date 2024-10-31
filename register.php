@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = htmlspecialchars(trim($_POST["password"]));
     $salt = bin2hex(random_bytes(16));
 
-    $errmsg = '';
+    $errmsg = ''; // commentable?
 
     $newUser = new User([
         'username' => $username,
@@ -25,10 +25,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } catch (PDOException $e) {
         if($e->getCode() == 23000){
             $errmsg = 'User already exists';
+            unset($newUser);
         }
     }
-
-    echo($errmsg);
 
     // Simple validation
     // if (empty($username) || empty($password)) {
@@ -48,17 +47,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="./public/assets/img/favicon.ico">
     <title>Register</title>
+    <link rel="icon" type="image/x-icon" href="./public/assets/img/favicon.ico">
 </head>
 <body>
     <h2>Register</h2>
-    <?php
-    // Display messages if there are any
-    if (!empty($messages)) {
-        foreach ($messages as $message) {
-            echo "<p>$message</p>";
-        }
-    }
-    ?>
     <form method="POST" action="">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
@@ -67,6 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <input type="password" id="password" name="password" required>
         <br><br>
         <button type="submit">Register</button>
+        <?php if(isset($errmsg)) echo  "<br>" . $errmsg; ?>
     </form>
 </body>
 </html>

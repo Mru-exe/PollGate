@@ -12,18 +12,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $userId = authenticate($conn, $username, $password);
     if($userId > 0){
-        //Destroy existing session for good measures
-        // session_unset();
-        // session_destroy();
         //Start new session
         session_start();
         $_SESSION['user_id'] = $userId;
+        // $_SESSION['user'] = new User
         $_SESSION['token'] = bin2hex(random_bytes(16));
         //Redirect home
         header('Location: index.php');
         exit;
     } else {
         $errmsg = 'Username or password is incorrect.';
+        unset($userId);
     }
 }
 ?>
@@ -54,6 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <input type="password" id="password" name="password" required>
         <br><br>
         <button type="submit">Login</button>
+        <?php if(isset($errmsg)) echo  "<br>" . $errmsg; ?>
     </form>
 </body>
 </html>
