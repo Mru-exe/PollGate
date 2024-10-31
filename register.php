@@ -15,13 +15,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $newUser = new User([
         'username' => $username,
         'passwordSalt' => $salt,
-        'passwordHash' => hash('sha256', $salt . $password, false)
-        // 'roleId' => 2,
+        'passwordHash' => hash('sha256', $salt . $password, false),
+        'roleId' => 1   
         // 'avatarPath' => 'path/to/avatar.jpg',
     ]);
 
     try {
-        $userid = $newUser->insert($conn);
+        $userId = $newUser->insert($conn);
+        if($userId > 0 ){
+
+        } else {
+            $errmsg = 'An error occured. Try again.';
+            unset($newUser);
+        }
     } catch (PDOException $e) {
         if($e->getCode() == 23000){
             $errmsg = 'User already exists';
@@ -54,10 +60,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <form method="POST" action="">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
-        <br><br>
+
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
-        <br><br>
+
+        <label for="password">Confirm password:</label>
+        <input type="password" id="password" name="password" required>
+
         <button type="submit">Register</button>
         <?php if(isset($errmsg)) echo  "<br>" . $errmsg; ?>
     </form>

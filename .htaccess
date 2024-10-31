@@ -1,7 +1,7 @@
 # .htaccess
 
-# ErrorDocument 404 /~kindlma7/PollGate/public/404.php
-# ErrorDocument 403 /~kindlma7/PollGate/public/404.php
+ErrorDocument 404 /~kindlma7/PollGate/public/404.php
+ErrorDocument 403 /~kindlma7/PollGate/public/404.php
 
 # RewriteEngine On
 # RewriteCond %{REQUEST_FILENAME} !-f
