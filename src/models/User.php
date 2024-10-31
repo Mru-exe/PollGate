@@ -2,11 +2,11 @@
 
 class User {
     // Properties corresponding to table columns
-    private ?int $id;
+    private int $id; //?
     private string $username;
     private string $passwordSalt;
     private string $passwordHash;
-    private ?int $roleId;
+    private int $roleId; //?
     private ?string $avatarPath; // Nullable, for cases where there is no avatar
     private DateTime $created;
     private ?DateTime $modified;
