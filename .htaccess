@@ -1,4 +1,9 @@
 # .htaccess
 
-ErrorDocument 404 /~kindlma7/PollGate/public/404.php
-ErrorDocument 403 /~kindlma7/PollGate/public/404.php
+# ErrorDocument 404 /~kindlma7/PollGate/public/404.php
+# ErrorDocument 403 /~kindlma7/PollGate/public/404.php
+
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
