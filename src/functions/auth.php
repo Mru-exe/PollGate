@@ -1,6 +1,8 @@
 <?php
 
-function authenticate(PDO $pdo, string $username, string $password): int{
+require_once __DIR__ . '/../functions/auth.php';
+
+function authenticateUser(PDO $pdo, string $username, string $password): int{
     $sql = "SELECT Id, PasswordSalt, PasswordHash FROM Users WHERE Username = :username";
 
     $stmt = $pdo->prepare($sql);
@@ -20,6 +22,15 @@ function authenticate(PDO $pdo, string $username, string $password): int{
         return 0;
     }
     return 0;
+}
+
+function logoutUser() {
+    // Clear session and cookie data, then redirect to login page or show an error
+    session_unset();
+    session_destroy();
+    setcookie('user_token', '', time() - 3600);  // Delete the cookie
+    header("Location: login.php");
+    exit();
 }
 
 ?>

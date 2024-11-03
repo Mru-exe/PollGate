@@ -1,16 +1,20 @@
 <?php
-// Check if the form is submitted
+require_once 'src/config/_dbcontext.php';
+require_once 'src/models/User.php';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    require_once __DIR__ . '/src/models/User.php';
-    require_once __DIR__ . '/src/config/_dbcontext.php';
-
     // Get the form data and sanitize it
     $username = htmlspecialchars(trim($_POST["username"]));
     $password = htmlspecialchars(trim($_POST["password"]));
-    $salt = bin2hex(random_bytes(16));
+    $confpassword = htmlspecialchars(trim($_POST["confpassword"]));
 
+    $salt = bin2hex(random_bytes(16));
     $errmsg = ''; // commentable?
+
+    if (empty($username) || empty($password) || empty($confpassword)) {
+        $errmsg = "All fields are required.";
+        exit;
+    }
 
     $newUser = new User([
         'username' => $username,
@@ -23,7 +27,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         $userId = $newUser->insert($conn);
         if($userId > 0 ){
+            session_start();
 
+            $_SESSION['user_id'] = $userId;
+            $_SESSION['token'] = bin2hex(random_bytes(16));
+
+            header('Location: index.php');
+            exit;
         } else {
             $errmsg = 'An error occured. Try again.';
             unset($newUser);
@@ -34,15 +44,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             unset($newUser);
         }
     }
-
-    // Simple validation
-    // if (empty($username) || empty($password)) {
-    //     $messages[] = "Both username and password are required.";
-    // } else {
-    //     // (In real use, you would save to a database here)
-    //     // For demo purposes, we're storing data in session or simply showing success
-    //     $messages[] = "Registration successful for user: $username";
-    // }
 }
 ?>
 
@@ -64,11 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
 
-        <label for="password">Confirm password:</label>
-        <input type="password" id="password" name="password" required>
+        <label for="confpassword">Confirm password:</label>
+        <input type="password" id="confpassword" name="confpassword" required>
 
         <button type="submit">Register</button>
-        <?php if(isset($errmsg)) echo  "<br>" . $errmsg; ?>
+        <?php if(isset($errmsg)) echo  "<br><span class=\"form-error-message\">" . $errmsg; ?>
     </form>
 </body>
 </html>

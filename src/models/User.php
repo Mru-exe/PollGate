@@ -35,7 +35,7 @@ class User {
         $stmt->bindValue(':passwordSalt', $this->passwordSalt, PDO::PARAM_STR);
         $stmt->bindValue(':passwordHash', $this->passwordHash, PDO::PARAM_STR);
         $stmt->bindValue(':roleId', $this->roleId, PDO::PARAM_INT);
-        $stmt->bindValue(':avatarPath', $this->avatarPath, PDO::PARAM_STR);
+        // $stmt->bindValue(':avatarPath', $this->avatarPath, PDO::PARAM_STR); //? tbd remove
 
         // Execute the statement and check for success
         if($stmt->execute()){

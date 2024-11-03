@@ -1,23 +1,26 @@
 <?php
-// Check if the form is submitted
+require_once 'src/config/_dbcontext.php';
+require_once 'src/functions/auth.php';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    // require_once __DIR__ . '/../src/models/User.php';
-    require_once 'src/config/_dbcontext.php';
-    require_once 'src/functions/_auth.php';
-
     // Get the form data and sanitize it
     $username = htmlspecialchars(trim($_POST["username"]));
     $password = htmlspecialchars(trim($_POST["password"]));
 
-    $userId = authenticate($conn, $username, $password);
+    if (empty($username) || empty($password)) {
+        $errmsg = "Both username and password are required.";
+        unset($newUser);
+        exit;
+    }
+
+    $userId = authenticateUser($conn, $username, $password);
+    
     if($userId > 0){
-        //Start new session
         session_start();
+
         $_SESSION['user_id'] = $userId;
-        // $_SESSION['user'] = new User
         $_SESSION['token'] = bin2hex(random_bytes(16));
-        //Redirect home
+
         header('Location: index.php');
         exit;
     } else {
