@@ -14,6 +14,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($username) || empty($password) || empty($confpassword)) {
         $errmsg = "All fields are required.";
         exit;
+    } elseif ($confpassword != $password) {
+        $errmsg = "Passwords don't match";
+        exit;
+    } else {
+        $errmsg = "Unexpected error occured.";
+        exit;
     }
 
     $newUser = new User([
