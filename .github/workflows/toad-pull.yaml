@@ -1,20 +1,24 @@
-# .github/workflows/run-shell-command.yml
-name: Run Shell Command
+name: Run Command on Remote Server
 
-# When to run this workflow
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_dispatch:  # Enables manual trigger from GitHub Actions tab
 
-# Define the jobs in this workflow
 jobs:
-  run-command:
+  remote-command:
     runs-on: ubuntu-latest
 
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v3
-      - name: Run shell command
-        run: echo "Hello, GitHub Actions!"
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Execute remote command via SSH
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          echo "Running remote command..."
+          # Replace 'your-command' with the command you want to run
+          your-command
