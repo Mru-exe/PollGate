@@ -1,0 +1,20 @@
+# .github/workflows/run-shell-command.yml
+name: Run Shell Command
+
+# When to run this workflow
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Define the jobs in this workflow
+jobs:
+  run-command:
+    runs-on: ubuntu-latest
+
+    steps:
+      # - name: Checkout code
+      #   uses: actions/checkout@v3
+      - name: Run shell command
+        run: echo "Hello, GitHub Actions!"
