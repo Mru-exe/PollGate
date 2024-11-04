@@ -23,5 +23,6 @@ jobs:
         port: 22
         script: |
           echo "Running remote command..."
-          # Replace 'your-command' with the command you want to run
-          echo "test" > ghtest.txt
+          cd www/PollGate
+          git pull origin dev
+
