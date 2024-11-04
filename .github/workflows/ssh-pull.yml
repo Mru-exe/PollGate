@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # Enables manual trigger from GitHub Actions tab
     inputs:
       password:
-        description: ''
+        description: 'Password'
         required: true
 jobs:
   remote-command:
