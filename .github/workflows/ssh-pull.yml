@@ -1,0 +1,24 @@
+name: Run Command on Remote Server
+
+on:
+  workflow_dispatch:  # Enables manual trigger from GitHub Actions tab
+
+jobs:
+  remote-command:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Execute remote command via SSH
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          echo "Running remote command..."
+          # Replace 'your-command' with the command you want to run
+          your-command
