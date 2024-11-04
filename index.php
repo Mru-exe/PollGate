@@ -18,6 +18,7 @@
     <link rel="icon" type="image/x-icon" href="./public/assets/img/favicon.ico">
 </head>
 <body>
+    <?php include 'public/partials/header.php';?>
     Index
 </body>
 </html>
