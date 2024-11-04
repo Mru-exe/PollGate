@@ -24,4 +24,4 @@ jobs:
         script: |
           echo "Running remote command..."
           # Replace 'your-command' with the command you want to run
-          your-command
+          echo "test" > ghtest.txt
