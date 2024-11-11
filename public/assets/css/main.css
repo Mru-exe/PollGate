@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&family=Asap:ital,wght@0,100..900;1,100..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&family=Asap:ital,wght@0,100..900;1,100..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap'); */
 
 :root {
     font-family: "DM Sans", sans-serif;
@@ -13,11 +13,11 @@ body {
 
 .header {
     border-bottom: 1px solid #262626;
-    background-color: #CFCFCF;
-    height: 2vh;
-}
-
-code {
-    background-color: #AFAFAF;
-    border-radius: 5px;
+    background-color: #3dade5;
+    height: 25px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0px 10px 0px 10px;
+    gap: 10px;
 }
