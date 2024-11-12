@@ -1,6 +1,6 @@
 <?php
 require_once 'src/config/_dbcontext.php';
-require_once 'src/functions/auth.php';
+require_once 'src/auth.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get the form data and sanitize it

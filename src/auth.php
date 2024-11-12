@@ -1,7 +1,4 @@
 <?php
-
-require_once __DIR__ . '/../functions/auth.php';
-
 function authenticateUser(PDO $pdo, string $username, string $password): int{
     $sql = "SELECT Id, PasswordSalt, PasswordHash FROM Users WHERE Username = :username";
 
@@ -29,11 +26,11 @@ function logoutUser() {
     try {
         session_unset();
         session_destroy();
-        echo "Sucessfuly logged out";
     } catch (\Throwable $th) {
         echo $th;
     }
-    // setcookie('user_token', '', time() - 3600);  // Delete the cookie
+    setcookie('user_token', '', time() - 3600);  // Delete the cookie
+    header("Location: ../../login.php");
     exit();
 }
 

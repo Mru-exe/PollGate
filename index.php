@@ -17,7 +17,7 @@
     <title>PollGate</title>
     <link rel="stylesheet" href="./public/assets/css/main.css">
     <link rel="icon" type="image/x-icon" href="./public/assets/img/favicon.ico">
-    <script src="public/assets/js/functions.js" defer></script>
+    <!-- <script src="public/assets/js/functions.js" defer></script> -->
 </head>
 <body>
     <?php include 'public/partials/header.php';?>
