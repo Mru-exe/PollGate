@@ -7,24 +7,39 @@ class Poll {
     private string $question;
     private string $pollTypeCode;
     private ?DateTime $created;
-    private ?int $createdBy;
+    private ?string $createdBy;
     private ?DateTime $modified;
-    private ?int $modifiedBy;
+    private ?string $modifiedBy;
 
     public function __construct(array $data) {
-        $this->id = $data['id'];
-        $this->name = $data['name'] ?? '';
-        $this->description = $data['description'];
-        $this->question = $data['question'] ?? '';
-        $this->pollTypeCode = $data['pollTypeCode'] ?? 'default';
-        $this->created = $data['created'];
-        $this->createdBy = $data['createdBy'];
-        $this->modified = $data['modified'] ?? null;
-        $this->modifiedBy = $data['modifiedBy'] ?? null;
+        $this->id = $data['Id'];
+        $this->name = $data['Name'] ?? '';
+        $this->description = $data['Description'];
+        $this->question = $data['Question'] ?? '';
+        $this->pollTypeCode = $data['PollTypeCode'] ?? 'default';
+        $this->created = new DateTime($data['Created']) ?? null;
+        $this->createdBy = $data['CreatedBy'] ?? null;
+        $this->modified = new DateTime($data['Modified']) ?? null;
+        $this->modifiedBy = $data['ModifiedBy'] ?? null;
     }
 
     public function getById(PDO $pdo){
         // $query = "SELECT ";
         return 0;
+    }
+
+    public function debug() {
+        $reflectionClass = new ReflectionClass($this);
+        foreach ($reflectionClass->getProperties() as $property) {
+            $property->setAccessible(true); // Allow access to private properties
+            $name = $property->getName();
+            $value = $property->getValue($this);
+            echo "$name: ";
+            if ($value instanceof DateTime) {
+                echo $value->format('Y-m-d H:i:s') . "<br>";
+            } else {
+                echo (is_null($value) ? 'null' : $value) . "<br>";
+            }
+        }
     }
 }
