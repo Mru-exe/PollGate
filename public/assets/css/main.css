@@ -1,23 +1,30 @@
-/* @import url('https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&family=Asap:ital,wght@0,100..900;1,100..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&family=Asap:ital,wght@0,100..900;1,100..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
 :root {
     font-family: "DM Sans", sans-serif;
 }
 
-body {
-    /*remove default browser margin*/
-    margin: 0;
-    border: none;
+.header > a.user-link{
+    text-decoration: none;
 }
 
-
 .header {
-    border-bottom: 1px solid #262626;
-    background-color: #3dade5;
-    height: 25px;
+    box-shadow: 0px 3px 3px 1px rgba(0, 0, 0, 0.5);
+    /* background-color: rgba(0, 0, 0, 0.1); */
+    font-size: 1.1em;
+    height: 35px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
     padding: 0px 10px 0px 10px;
     gap: 10px;
+}
+
+span.headline {
+    font-size: 2em;
+}
+
+div.btn {
+    background-color: #6164ff;
+    
 }
