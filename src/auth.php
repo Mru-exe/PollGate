@@ -30,7 +30,7 @@ function logoutUser() {
         echo $th;
     }
     setcookie('user_token', '', time() - 3600);  // Delete the cookie
-    header("Location: ../../login.php");
+    header("Location: index.php");
     exit();
 }
 
