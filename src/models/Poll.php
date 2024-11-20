@@ -1,5 +1,21 @@
 <?php
 
+function getPollById(PDO $pdo, int $id){
+    $query = "SELECT * FROM vPolls WHERE Id = :pollId";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(":pollId", $id, PDO::PARAM_INT);
+
+    try {
+        $stmt->execute();
+        $res = $stmt->fetch();
+    } catch (PDOException $e) {
+        // echo $e->getMessage();
+        return $e; // returns PDOException instance
+    }
+    if(!empty($res)) return new Poll($res); //returns Poll instance
+    return null;
+}
+
 class Poll {
     private int $id;
     private string $name;
