@@ -1,0 +1,19 @@
+# .htaccess
+
+#Environment variables
+SetEnv DB_HOST "localhost"
+SetEnv DB_NAME "kindlma7"
+SetEnv DB_USER "kindlma7"
+SetEnv DB_PASS "webove aplikace"
+
+#Redirect php error log
+php_value error_log "./logs/php_errors.log"
+
+#Disable error display
+php_value display_errors "On"
+
+#Redirect to error pages
+ErrorDocument 400 /~kindlma7/PollGate/error.php?code=400
+ErrorDocument 402 /~kindlma7/PollGate/error.php?code=402
+ErrorDocument 404 /~kindlma7/PollGate/error.php?code=404
+ErrorDocument 500 /~kindlma7/PollGate/error.php?code=500
