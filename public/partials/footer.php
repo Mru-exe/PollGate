@@ -1,10 +1,10 @@
 <footer class="default-footer">
-    <span>
+    <div>
         &copy; 2025 | 
-        <a class="silent bold" target="_blank" href="mailto:kindlma7@cvut.cz">Martin Kindl</a> 
+        <a class="silent bold" href="mailto:kindlma7@cvut.cz">Martin Kindl</a> 
         @ 
         <a class="silent bold" target="_blank" href="https://fel.cvut.cz/en"> CTU FEE </a>
-    </span>
+    </div>
 </footer>
-<body>
+</body>
 </html>

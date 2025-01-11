@@ -1,0 +1,48 @@
+@keyframes recent-polls-intro {
+    from {
+        opacity: 0;
+        filter: blur(5px);
+        /* transform: translateY(-300px); */
+    }
+    to {
+        opacity: 1;
+        filter: none;
+        transform: none;
+    }
+}
+
+@keyframes search-polls-intro {
+    from {
+        opacity: 0;
+        filter: blur(5px);
+        /* transform: translateX(-300px); */
+    }
+    to {
+        opacity: 1;
+        filter: none;
+        transform: none;
+    }
+}
+
+@keyframes user-about-intro {
+    from {
+        opacity: 0;
+        filter: blur(5px);
+        /* transform: translateX(300px); */
+    }
+    to {
+        opacity: 1;
+        filter: none;
+        transform: none;
+    }
+}
+
+@keyframes result-item-intro {
+    from {
+        opacity: 0;
+        filter: blur(5px);
+    } to {
+        opacity: 1;
+        filter: none;
+    }
+}

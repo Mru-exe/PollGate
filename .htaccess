@@ -17,3 +17,11 @@ ErrorDocument 400 /~kindlma7/PollGate/error.php?code=400
 ErrorDocument 402 /~kindlma7/PollGate/error.php?code=402
 ErrorDocument 404 /~kindlma7/PollGate/error.php?code=404
 ErrorDocument 500 /~kindlma7/PollGate/error.php?code=500
+
+
+# #MVC Settings:
+# Options +FollowSymLinks
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_URI} !(\.)
+# RewriteRule ^(.*)$ index.php?params=$1 [QSA, L]

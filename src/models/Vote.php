@@ -22,7 +22,7 @@ class Vote {
         $this->id = $id;
         $this->pollId = $pollId;
         $this->pollOptionId = $pollOptionId;
-        $this->created = $created ?? new DateTime($created);
+        $this->created = new DateTime($created);
         $this->createdBy = $createdBy;
     }
 }

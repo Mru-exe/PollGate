@@ -31,7 +31,7 @@ class Poll {
     public ?int $modifiedBy;
     public string $modifiedByUsername;
 
-    public function __construct(int $id, string $title, string $description, string $question, string $pollTypeCode, int $responses, string $created, int $createdBy, string $createdByUsername, string $modified = null, int $modifiedBy, string|null $modifiedByUsername) {
+    public function __construct(int $id, string $title, string $description, string $question, string $pollTypeCode, int $responses, string $created, int $createdBy, string $createdByUsername = "", string $modified = null, int $modifiedBy = 0, string|null $modifiedByUsername = "") {
         $this->id = $id;
         $this->title = $title;
         $this->description = $description;

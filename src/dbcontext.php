@@ -1,6 +1,6 @@
 <?php
 /*
- * This file contains the database context and repository classes for interacting with the database.
+ * This file contains the database context and repository class for interacting with the database.
  * 
  * It includes the following functionalities:
  * - Database connection configuration using environment variables.
@@ -32,6 +32,7 @@
  */
 //TODO: Set permission of the file to 600
 //TODO: Fix QUERIES to match new database
+//TODO: GET USER STATS
 
 //Include entity classes
 require_once "models/User.php";
@@ -70,6 +71,36 @@ class Repository {
     }
 
     /**
+     * Searches for polls based on the user's query.
+     *
+     * @param string $userQuery The search query provided by the user.
+     * @param int $limit The maximum number of results to return. Default is 3.
+     * @param int $offset The number of results to skip before starting to collect the result set. Default is 0.
+     * @return array|null An array of Poll objects if results are found, null otherwise.
+     * @throws PDOException If a database error occurs.
+     */
+    public function searchPolls(string $userQuery, int $limit = 3, int $offset = 0) {
+        $sql = "WITH FilteredPolls AS (SELECT * FROM vPolls WHERE title LIKE :titleLike OR question LIKE :questionLike) SELECT p.*, (SELECT COUNT(*) FROM FilteredPolls) AS count FROM FilteredPolls p LIMIT :limit OFFSET :offset;";
+        $userQuery = '%'.$userQuery.'%';
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([':titleLike' => $userQuery, ':questionLike' => $userQuery, ':limit' => $limit, ':offset' => $offset]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($results === false) {
+                return null;
+            }
+            $polls = array_map(function($row) {
+                return new Poll($row['id'], $row['title'], $row['description'], $row['question'], $row['pollTypeCode'], $row['responses'], $row['created'], $row['createdBy'], $row['createdByUsername'], $row['modified'], $row['modifiedBy'], $row['modifiedByUsername']);
+            }, $results);
+            return ["count"=>$results[0]['count'], "polls"=>$polls];
+        } catch (PDOException $e) {
+            error_log('PDO Exception occurred: ' . $e->getMessage());
+            throw $e;
+            // throw new Exception('Unable to search polls at this time.');
+        }
+    }
+
+    /**
      * Retrieves a user by their ID.
      *
      * @param int $id The ID of the user to retrieve.
@@ -82,7 +113,7 @@ class Repository {
             throw new InvalidArgumentException('Invalid user ID');
         }
 
-        $query = "SELECT u.id, username, passwordSalt, passwordHash, roleId, r.displayName AS roleDisplayName, avatarUrl, u.created, u.modified FROM Users u LEFT JOIN Roles r ON roleId = r.id WHERE u.id = :id";
+        $query = "SELECT * FROM vUsers WHERE id = :id";
 
         try {
             $stmt = $this->conn->prepare($query);
@@ -91,7 +122,7 @@ class Repository {
             if($result === false){
                 return null;
             }
-            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['avatarUrl'], $result['roleDisplayName']);
+            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['roleName'], $result['avatarToken'], $result['created'], $result['modified']);
         } catch (PDOException $e) {
             error_log('PDO Exception occurred: ' . $e->getMessage());
             throw new Exception('Unable to fetch user at this time.');
@@ -112,7 +143,7 @@ class Repository {
             throw new InvalidArgumentException('Invalid username');
         }
 
-        $query = "SELECT u.id, username, passwordSalt, passwordHash, roleId, r.displayName AS roleDisplayName, avatarUrl, u.created, u.modified FROM Users u LEFT JOIN Roles r ON roleId = r.id WHERE u.username = :username";
+        $query = "SELECT u.id, username, passwordSalt, passwordHash, roleId, r.displayName AS roleDisplayName, avatarToken, u.created, u.modified FROM Users u LEFT JOIN Roles r ON roleId = r.id WHERE u.username = :username";
 
         try {
             $stmt = $this->conn->prepare($query);
@@ -121,7 +152,28 @@ class Repository {
             if($result === false) {
                 return null;
             }
-            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['avatarUrl'], $result['roleDisplayName']);
+            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['avatarToken'], $result['roleDisplayName']);
+        } catch (PDOException $e) {
+            error_log('PDO Exception occurred: ' . $e->getMessage());
+            throw new Exception('Unable to fetch user at this time.');
+        }
+        return null;
+    }
+
+    public function getUsers(int $limit = 10, int $offset = 0){
+        $query = "SELECT * FROM vUsers LIMIT :limit OFFSET :offset";
+        
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':limit' => $limit, ':offset' => $offset]);
+            $results = $stmt->fetchAll();
+            if($results === false){
+                return null;
+            }
+            $users = array_map(function($row) {
+                return new User($row['id'], $row['username'], $row['passwordSalt'], $row['passwordHash'], $row['roleId'], $row['avatarToken'], $row['roleName'], $row['created'], $row['modified']);
+            }, $results);
+            return $users;        
         } catch (PDOException $e) {
             error_log('PDO Exception occurred: ' . $e->getMessage());
             throw new Exception('Unable to fetch user at this time.');
@@ -142,7 +194,7 @@ class Repository {
             throw new InvalidArgumentException('Invalid limit or offset value');
         }
 
-        $query = "SELECT id, title, description, question, pollTypeCode, created, createdBy, modified, modifiedBy FROM Polls WHERE id = :id";
+        $query = "SELECT * FROM vPolls WHERE id = :id";
 
         try {
             $stmt = $this->conn->prepare($query);
@@ -151,7 +203,7 @@ class Repository {
             if($result === false){
                 return null;
             }
-            return new Poll($result["id"], $result["title"], $result["description"], $result["question"], $result["pollTypeCode"], $result["created"], $result["createdBy"], $result["modified"], $result["modifiedBy"]);
+            return new Poll($result["id"], $result["title"], $result["description"], $result["question"], $result["pollTypeCode"], $result['responses'], $result["created"], $result["createdBy"], $result['createdByUsername'], $result["modified"], $result["modifiedBy"], $result['modifiedByUsername']);
         } catch (PDOException $e) {
             error_log('PDO Exception occurred: ' . $e->getMessage());
             throw new Exception('Unable to fetch poll at this time.');
@@ -164,15 +216,16 @@ class Repository {
      *
      * @param int $limit The maximum number of polls to retrieve. Default is 10.
      * @param int $offset The number of polls to skip before starting to retrieve. Default is 0.
+     * @param string $order Column name to order by. Default is id.
      * @return array|null An array of Poll objects if successful, or null if no polls are found or an error occurs.
      * @throws InvalidArgumentException If the provided limit or offset are invalid.
      * @throws Exception If there is an error executing the query.
      */
-    public function getPolls(int $limit = 10, int $offset = 0){
+    public function getPolls(int $limit = 10, int $offset = 0, string $filter = "1=1", string $order = "id"){
         if (!is_int($limit) || !is_int($offset) || $offset < 0 || $limit < 0) {
             throw new InvalidArgumentException('Invalid poll limit or offset');
         }
-        $query = "SELECT id, title, description, question, pollTypeCode, created, createdBy, modified, modifiedBy FROM Polls WHERE deleted = 0 LIMIT :limit OFFSET :offset";
+        $query = "SELECT * FROM vPolls WHERE $filter ORDER BY $order LIMIT :limit OFFSET :offset";
         
         try {
             $stmt = $this->conn->prepare($query);
@@ -182,7 +235,7 @@ class Repository {
                 return null;
             }
             $polls = array_map(function($row) {
-                return new Poll($row['id'], $row['title'], $row['description'], $row['question'], $row['pollTypeCode'], $row['created'], $row['createdBy'], $row['modified'], $row['modifiedBy']);
+                return new Poll($row['id'], $row['title'], $row['description'], $row['question'], $row['pollTypeCode'], $row['responses'], $row['created'], $row['createdBy'], $row['createdByUsername'], $row['modified'], $row['modifiedBy'], $row['modifiedByUsername']);
             }, $results);
             return $polls;
         } catch (PDOException $e) {
@@ -215,7 +268,7 @@ class Repository {
                 return null;
             }
             $pollOptions = array_map(function($row) {
-                return new PollOption($row['id'], $row['pollID'], $row['optionValue']);
+                return new PollOption($row['id'], $row['pollId'], $row['optionValue']);
             }, $results);
             return $pollOptions;
 
@@ -226,6 +279,14 @@ class Repository {
         return null;
     }
 
+    /**
+     * Retrieves votes associated with a specific poll ID.
+     *
+     * @param int $pollId The ID of the poll for which votes are to be retrieved.
+     * @return array|null An array of Vote objects if votes are found, null otherwise.
+     * @throws InvalidArgumentException If the provided poll ID is not a positive integer.
+     * @throws Exception If there is an error while fetching votes from the database.
+     */
     public function getVotesByPollId(int $pollId) {
         if (!is_int($pollId) || $pollId <= 0) {
             throw new InvalidArgumentException('Invalid poll ID');
@@ -270,7 +331,7 @@ class Repository {
     }
 
     public function insertUser(User $user) {
-        $query = "INSERT INTO Users (username, passwordSalt, passwordHash, roleId, avatarUrl) VALUES (:username, :passwordSalt, :passwordHash, :roleId, :avatarUrl)";
+        $query = "INSERT INTO Users (username, passwordSalt, passwordHash, roleId, avatarToken) VALUES (:username, :passwordSalt, :passwordHash, :roleId, :avatarToken)";
 
         try {
             $stmt = $this->conn->prepare($query);
@@ -279,14 +340,11 @@ class Repository {
                 ':passwordSalt' => $user->passwordSalt,
                 ':passwordHash' => $user->passwordHash,
                 ':roleId' => $user->roleId,
-                ':avatarUrl' => $user->avatarUrl
+                ':avatarToken' => $user->avatarToken
             ]);
         } catch (PDOException $e) {
-            if($e->errorInfo[1] === 1062) {
-                throw new Exception('Username already exists.');
-            }
             error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to insert user at this time.');
+            throw $e;
         }
         return $this->conn->lastInsertId();
     }
@@ -311,61 +369,64 @@ class Repository {
     }
 
     public function insertPoll(Poll $poll) {
-        $query = "INSERT INTO poll (question, created, modified) VALUES (:question, :created, :modified)";
+        $query = "INSERT INTO Polls (title, description, question, createdBy) VALUES (:title, :description, :question, :createdBy)";
 
         try {
             $stmt = $this->conn->prepare($query);
             $stmt->execute([
+                ':title' => $poll->title,
+                ':description' => $poll->description,
                 ':question' => $poll->question,
-                ':created' => $poll->created->format('Y-m-d H:i:s'),
-                ':modified' => $poll->modified->format('Y-m-d H:i:s')
+                ':createdBy' => $poll->createdBy
             ]);
+            return $this->conn->lastInsertId();
         } catch (PDOException $e) {
             error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to insert poll at this time.');
+            throw $e;
         }
     }
 
     public function insertPollOptions(array $pollOptions) {
-        $query = "INSERT INTO poll_option (poll_id, option_text) VALUES ";
+        $query = "INSERT INTO PollOptions (pollId, optionValue) VALUES ";
         
         $values = [];
         $params = [];
         foreach ($pollOptions as $index => $option) {
             $values[] = "(?, ?)";
             $params[] = $option->pollId;
-            $params[] = $option->optionText;
+            $params[] = $option->optionValue;
         }
-
+        
         $query .= implode(", ", $values);
+        error_log($query);
 
         try {
             $stmt = $this->conn->prepare($query);
             $stmt->execute($params);
         } catch (PDOException $e) {
             error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to insert poll options at this time.');
+            throw $e;
         }
     }
 
     public function insertVote(Vote $vote) {
-        $query = "INSERT INTO vote (poll_id, poll_option_id, user_id) VALUES (:poll_id, :poll_option_id, :user_id)";
+        $query = "INSERT INTO Votes (pollId, pollOptionId, createdBy) VALUES (:pollId, :pollOptionId, :userId)";
 
         try {
             $stmt = $this->conn->prepare($query);
             $stmt->execute([
-                ':poll_id' => $vote->pollId,
-                ':poll_option_id' => $vote->pollOptionId,
-                ':user_id' => $vote->createdBy
+                ':pollId' => $vote->pollId,
+                ':pollOptionId' => $vote->pollOptionId,
+                ':userId' => $vote->createdBy
             ]);
         } catch (PDOException $e) {
             error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to insert vote at this time.');
+            throw  $e;
         }
     }
 
     public function updateUser(User $user) {
-        $query = "UPDATE user SET username = :username, passwordHash = :passwordHash, roleId = :roleId WHERE id = :id";
+        $query = "UPDATE Users SET username = :username, passwordHash = :passwordHash, roleId = :roleId WHERE id = :id";
 
         try {
             $stmt = $this->conn->prepare($query);
@@ -377,7 +438,7 @@ class Repository {
             ]);
         } catch (PDOException $e) {
             error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to update user at this time.');
+            throw $e;
         }
     }
 
@@ -489,10 +550,42 @@ class Repository {
         }
 
     }
+
+    /**
+     * Checks whether a user has already voted in a poll.
+     *
+     * @param int $userId The ID of the user.
+     * @param int $pollId The ID of the poll.
+     * @return bool True if the user has already voted, false otherwise.
+     * @throws InvalidArgumentException If the provided user ID or poll ID are not positive integers.
+     * @throws Exception If there is an error while checking the vote in the database.
+     */
+    public function getUserVote(int $userId, int $pollId) {
+        if (!is_int($userId) || $userId <= 0 || !is_int($pollId) || $pollId <= 0) {
+            throw new InvalidArgumentException('Invalid user ID or poll ID');
+        }
+
+        $query = "SELECT pollOptionId FROM Votes WHERE createdBy = :userId AND pollId = :pollId";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':userId' => $userId, ':pollId' => $pollId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if($result !== false){
+                return $result['pollOptionId'];
+            }
+            return $result;
+        } catch (PDOException $e) {
+            error_log('PDO Exception occurred: ' . $e->getMessage());
+            throw new Exception('Unable to check vote status at this time.');
+        }
+    }
 }
 
 if(isset($pdo)) {
     $db = new Repository($pdo);
+} else {
+header("Location: /~kindlma7/PollGate/error.php?code=leaf");
 }
 
 ?>

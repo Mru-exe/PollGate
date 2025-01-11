@@ -91,7 +91,7 @@ function saveFile($image, $filename, $prefix = "") {
     $filename = $prefix.$filename;
     $path = "public/assets/avatars/$filename";
     file_put_contents($path.".png", $image);
-    return $path;
+    return $filename.".png";
 }
 
 /**
@@ -99,15 +99,15 @@ function saveFile($image, $filename, $prefix = "") {
  *
  * @param string $username The username of the new user.
  * @param string $password The password of the new user.
- * @param mixed $image Optional. The image file for the user's avatar. Default is false.
+ * @param array|bool $image Optional. The image file for the user's avatar. Default is false.
  * 
- * @return bool Returns true if the user was successfully registered, false otherwise.
+ * @return bool|string Returns true if the user was successfully registered, error message otherwise.
  * 
  * @throws \Exception If there is an error during the user registration process.
  */
 function register($username, $password, $image = false){
     require_once "dbcontext.php";
-    $salt = bin2hex(random_bytes(16)); // TODO: change to obey unique constraint
+    $salt = bin2hex(random_bytes(16));
     
     if($image){
         $avatar = resizeImage($image, 32, 32);
@@ -117,7 +117,7 @@ function register($username, $password, $image = false){
         $avatarToken = saveFile($avatar, $filaname);
         saveFile($avatar2x, $filaname, "2x@");
     } else {
-        $avatarToken = "public/assets/avatars/default";
+        $avatarToken = "defaultAvatar.png";
     }
 
     $newUser = new User(0, $username, $salt, hash('sha256', $salt.$password, false), 4, $avatarToken);
@@ -131,13 +131,14 @@ function register($username, $password, $image = false){
             $_SESSION["avatarToken"] = $newUser->avatarToken;
             return true;
         }
-    } catch (\Exception $e) {
-        // if($e->getCode() == 23000){
-        //     $errmsg = 'User already exists';
-        // }
-        die($e->getMessage());
+    } catch (PDOException $e) {
+        if($e->getCode() == 23000){
+            return "User already exists";
+        } else {
+            return $e->getMessage();
+        }
     }
-    return false;
+    return "Something went wrong, try again...";
 }
 
 /**
@@ -153,4 +154,66 @@ function logout() {
     session_destroy();
     header("Location: /~kindlma7/PollGate/index.php");
     exit();
+}
+
+/**
+ * Shortens a given string to a specified maximum length, appending an ellipsis if the string is truncated.
+ *
+ * @param string $inputString The string to be shortened.
+ * @param int $maxLength The maximum length of the returned string, including the ellipsis.
+ * @return string The shortened string, with an ellipsis appended if it was truncated.
+ */
+function shortenString($inputString, $maxLength) {
+    if (strlen($inputString) > $maxLength) {
+        return substr($inputString, 0, $maxLength - 3) . '...';
+    }
+    return $inputString;
+}
+
+/**
+ * Validates the registration form input.
+ *
+ * @param string $username The username input from the registration form.
+ * @param string $password The password input from the registration form.
+ * @param string $confpassword The confirmation password input from the registration form.
+ * 
+ * @return array|string An array with an error message if validation fails, or an empty string if validation passes.
+ */
+function registerValidation($username, $password, $confpassword) { 
+    //VALIDATE CSRF TOKEN
+    if(!hash_equals($_SESSION["csrf-token"], $_POST["csrf-token"])) {
+        return ["form-error" => "Invalid CSRF token."];
+    }
+    //VALIDATE INPUT
+    if(empty($username) || empty($password) || empty($confpassword)) {
+        return ["form-error" => "Please fill out all fields."];
+    }
+    //VALIDATE PASSWORDS MATCH
+    if($confpassword != $password) {
+        return ["form-error" => "Passwords didn't match."]; //TODO: předělat key na "password-error" (kill me)
+    }
+    return "";
+}
+
+/**
+ * Validates the login process by checking CSRF token, input fields, and attempting login.
+ *
+ * @param string $username The username provided by the user.
+ * @param string $password The password provided by the user.
+ * @return string Returns an error message if validation fails, otherwise returns an empty string.
+ */
+function loginValidation($username, $password) {
+    //VALIDATE CSRF TOKEN
+    if(!hash_equals($_SESSION["csrf-token"], $_POST["csrf-token"])) {
+        return "Invalid CSRF token.";
+    }
+    //VALIDATE INPUT
+    if(empty($username) || empty($password)) {
+        return "Please fill out all fields.";
+    }
+    //ATTEMPT LOGIN
+    if(!login($username, $password)) {
+        return "Invalid username or password.";
+    }
+    return "";
 }
