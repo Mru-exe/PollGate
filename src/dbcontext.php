@@ -1,35 +1,4 @@
 <?php
-/*
- * This file contains the database context and repository class for interacting with the database.
- * 
- * It includes the following functionalities:
- * - Database connection configuration using environment variables.
- * - PDO instance creation with error handling.
- * - Repository class with methods for CRUD operations on Users, Polls, PollOptions, and Votes.
- * 
- * The repository methods include:
- * - getUserById(int $id): Retrieves a user by their ID.
- * - getUserByUsername(string $username): Retrieves a user by their username.
- * - getPollById(int $id): Retrieves a poll by its ID.
- * - getPolls(int $limit = 10, int $offset = 0): Retrieves a list of polls with pagination.
- * - getPollOptionsByPollId(int $pollId): Retrieves poll options by poll ID.
- * - getVotesByPollId(int $pollId): Retrieves votes by poll ID.
- * - getUsernameAvailability(string $username): Checks if a username is available.
- * - insertUser(User $user): Inserts a new user into the database.
- * - getRolebyId(int $id): Retrieves a role by its ID.
- * - insertPoll(Poll $poll): Inserts a new poll into the database.
- * - insertPollOptions(array $pollOptions): Inserts multiple poll options into the database.
- * - insertVote(Vote $vote): Inserts a new vote into the database.
- * - updateUser(User $user): Updates an existing user in the database.
- * - updatePoll(Poll $poll): Updates an existing poll in the database.
- * - updatePollOptions(array $pollOptions): Updates multiple poll options in the database.
- * - softDeleteUser(int $id): Soft deletes a user by setting the deleted flag.
- * - softDeletePoll(int $id): Soft deletes a poll by setting the deleted flag.
- * - deletePoll(int $id): Deletes a poll and its options from the database.
- * - deleteUser(int $id): Deletes a user from the database.
- * 
- * The repository class uses prepared statements to prevent SQL injection and handles exceptions by logging errors and throwing exceptions.
- */
 //TODO: Set permission of the file to 600
 //TODO: Fix QUERIES to match new database
 //TODO: GET USER STATS
@@ -70,6 +39,66 @@ class Repository {
         $this->conn = $conn;
     }
 
+    //USER RELATED METHODS
+
+    /**
+     * Retrieves a list of users from the database.
+     *
+     * @param int $limit The maximum number of users to retrieve. Default is 10.
+     * @param int $offset The number of users to skip before starting to collect the result set. Default is 0.
+     * @return User[]|null An array of User objects or null if no users are found.
+     * @throws PDOException If there is an error executing the query.
+     */
+    public function getUsers(int $limit = 10, int $offset = 0){
+        $query = "SELECT * FROM vUsers LIMIT :limit OFFSET :offset";
+        
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $results = $stmt->fetchAll();
+            if($results === false){
+            }
+            $users = array_map(function($row) {
+                return new User($row['id'], $row['username'], $row['passwordSalt'], $row['passwordHash'], $row['roleId'], $row['avatarToken'], $row['roleName'], $row['created'], $row['modified']);
+            }, $results);
+            return $users;        
+        } catch (PDOException $e) {
+            error_log('PDO Exception at getUsers(): ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Retrieves a user by their ID.
+     *
+     * @param int $id The ID of the user to retrieve.
+     * @return User|null The User object if found, null if not found.
+     * @throws InvalidArgumentException If the provided user ID is invalid.
+     * @throws PDOException If there is an error executing the query.
+     */
+    public function getUserById(int $id) {
+        if ($id <= 0) {
+            throw new InvalidArgumentException('Invalid user ID');
+        }
+
+        $query = "SELECT * FROM vUsers WHERE id = :id";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':id' => $id]);
+            $result = $stmt->fetch();
+            if($result === false){
+                return null;
+            }
+            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['avatarToken'], $result['roleName'], $result['created'], $result['modified']);
+        } catch (PDOException $e) {
+            error_log('PDO Exception at getUserById(): ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
     /**
      * Searches for polls based on the user's query.
      *
@@ -87,7 +116,6 @@ class Repository {
             $stmt->execute([':titleLike' => $userQuery, ':questionLike' => $userQuery, ':limit' => $limit, ':offset' => $offset]);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             if ($results === false) {
-                return null;
             }
             $polls = array_map(function($row) {
                 return new Poll($row['id'], $row['title'], $row['description'], $row['question'], $row['pollTypeCode'], $row['responses'], $row['created'], $row['createdBy'], $row['createdByUsername'], $row['modified'], $row['modifiedBy'], $row['modifiedByUsername']);
@@ -101,42 +129,12 @@ class Repository {
     }
 
     /**
-     * Retrieves a user by their ID.
-     *
-     * @param int $id The ID of the user to retrieve.
-     * @return User|null The User object corresponding to the given ID.
-     * @throws InvalidArgumentException If the provided ID is not a positive integer.
-     * @throws Exception If there is an error while fetching the user from the database.
-     */
-    public function getUserById(int $id) {
-        if (!is_int($id) || $id <= 0) {
-            throw new InvalidArgumentException('Invalid user ID');
-        }
-
-        $query = "SELECT * FROM vUsers WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':id' => $id]);
-            $result = $stmt->fetch();
-            if($result === false){
-                return null;
-            }
-            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['roleName'], $result['avatarToken'], $result['created'], $result['modified']);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occurred: ' . $e->getMessage());
-            throw new Exception('Unable to fetch user at this time.');
-        }
-        return null;
-    }
-
-    /**
      * Retrieves a user by their username.
      *
      * @param string $username The username of the user to retrieve.
      * @return User|null The User object if found, null otherwise.
      * @throws InvalidArgumentException If the provided username is not a valid string or is empty.
-     * @throws Exception If there is an error executing the query.
+     * @throws PDOException If there is an error executing the database query.
      */
     public function getUserByUsername(string $username) {
         if (!is_string($username) || empty($username)) {
@@ -144,7 +142,7 @@ class Repository {
         }
 
         $query = "SELECT u.id, username, passwordSalt, passwordHash, roleId, r.displayName AS roleDisplayName, avatarToken, u.created, u.modified FROM Users u LEFT JOIN Roles r ON roleId = r.id WHERE u.username = :username";
-
+        $query = "SELECT u.id, username, passwordSalt, passwordHash, roleId, r.displayName AS roleDisplayName, avatarToken, u.created, u.modified FROM Users u INNER JOIN Roles r ON roleId = r.id WHERE u.username = :username";
         try {
             $stmt = $this->conn->prepare($query);
             $stmt->execute([':username' => $username]);
@@ -152,42 +150,176 @@ class Repository {
             if($result === false) {
                 return null;
             }
-            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['avatarToken'], $result['roleDisplayName']);
+            return new User($result['id'], $result['username'], $result['passwordSalt'], $result['passwordHash'], $result['roleId'], $result['avatarToken'], $result['roleDisplayName'], $result['created'], $result['modified']);
         } catch (PDOException $e) {
-            error_log('PDO Exception occurred: ' . $e->getMessage());
-            throw new Exception('Unable to fetch user at this time.');
+            error_log('PDO Exception at getUserByUsernane(): ' . $e->getMessage());
+            throw $e;
         }
-        return null;
     }
 
-    public function getUsers(int $limit = 10, int $offset = 0){
-        $query = "SELECT * FROM vUsers LIMIT :limit OFFSET :offset";
-        
+    /**
+     * Retrieves user's statistics by their ID.
+     * 
+     * @param int $it The ID of the user.
+     * @return array Associative array of stats.
+     * @throws InvalidArgumentException If the provided ID is not a valid integer.
+     * @throws PDOException If there is an error executing the database query.
+     */
+    public function getUserStats(int $id){
+        if ($id <= 0) {
+            throw new InvalidArgumentException('Invalid user ID');
+        }
+
+        $query = "SELECT (SELECT COUNT(*) FROM Votes v WHERE v.createdBy = :userIdv) AS votes, (SELECT COUNT(*) FROM Polls p WHERE p.createdBy = :userIdp) AS polls";
+
         try {
             $stmt = $this->conn->prepare($query);
-            $stmt->execute([':limit' => $limit, ':offset' => $offset]);
-            $results = $stmt->fetchAll();
-            if($results === false){
-                return null;
-            }
-            $users = array_map(function($row) {
-                return new User($row['id'], $row['username'], $row['passwordSalt'], $row['passwordHash'], $row['roleId'], $row['avatarToken'], $row['roleName'], $row['created'], $row['modified']);
-            }, $results);
-            return $users;        
+            $stmt->execute([':userIdv' => $id, ':userIdp' => $id]);
+            $result = $stmt->fetch();
+            return ["polls" => $result['polls'], 'votes' => $result['votes']];
         } catch (PDOException $e) {
             error_log('PDO Exception occurred: ' . $e->getMessage());
-            throw new Exception('Unable to fetch user at this time.');
+            throw $e;
         }
-        return null;
     }
+
+    /**
+     * Updates a user in the database.
+     *
+     * @param User $user An instance of the User class containing user details.
+     * @throws PDOException If the insertion fails.
+     */    
+    public function updateUser(User $user) {
+        $query = "UPDATE Users SET username = :username, passwordHash = :passwordHash, roleId = :roleId, avatarToken = :avatarToken WHERE id = :id";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([
+                ':username' => $user->username,
+                ':passwordHash' => $user->passwordHash,
+                ':roleId' => $user->roleId,
+                'avatarToken' => $user->avatarToken,
+                ':id' => $user->id
+            ]);
+        } catch (PDOException $e) {
+            error_log('PDO Exception occured: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Deletes a user from the database.
+     *
+     * @param User $id The ID of the users to be deleted.
+     * @throws PDOException If the insertion fails.
+     */
+    public function deleteUser(int $id) {
+        if (!is_int($id) || $id <= 0) {
+            throw new InvalidArgumentException('Invalid user ID');
+        }
+
+        $query = "DELETE FROM Users WHERE id = :id";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':id' => $id]);
+        } catch (PDOException $e) {
+            error_log('PDO Exception occured: ' . $e->getMessage());
+            throw new Exception('Unable to delete user at this time.');
+        }
+
+    }
+
+    /**
+     * Retreives User's vote in a specified Poll.
+     *
+     * @param int $userId The ID of the user.
+     * @param int $pollId The ID of the poll.
+     * @return int|bool ID of the chosen answer if the user has voted, false otherwise.
+     * @throws InvalidArgumentException If the provided user ID or poll ID are not positive integers.
+     * @throws PDOException If there is an error while checking the vote in the database.
+     */
+    public function getUserVote(int $userId, int $pollId) {
+        if (!is_int($userId) || $userId <= 0 || !is_int($pollId) || $pollId <= 0) {
+            throw new InvalidArgumentException('Invalid user ID or poll ID');
+        }
+
+        $query = "SELECT pollOptionId FROM Votes WHERE createdBy = :userId AND pollId = :pollId";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':userId' => $userId, ':pollId' => $pollId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if($result !== false){
+                return $result['pollOptionId'];
+            }
+            return $result;
+        } catch (PDOException $e) {
+            error_log('PDO Exception occurred: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Retrieves a amount of users with the desired username.
+     *
+     * @param int $username The desider username.
+     * @return int Amount of users with such username, 0 if none.
+     * @throws InvalidArgumentException If the provided Username is not valid.
+     * @throws PDOException If there is an error executing the database query.
+     */
+    public function getUsernameAvailability(string $username) {
+        if (!is_string($username) || empty($username)) {
+            throw new InvalidArgumentException('Invalid username');
+        }
+
+        $query = "SELECT COUNT(id) AS count FROM Users WHERE username = :username";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':username' => $username]);
+            return $stmt->fetch()['count'];
+        } catch (PDOException $e) {
+            error_log('PDO Exception at getUsernameAvailability(): ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Inserts a new user into the database.
+     *
+     * @param User $user An instance of the User class containing user details.
+     * @return int The ID of the newly inserted user.
+     * @throws PDOException If the insertion fails.
+     */
+    public function insertUser(User $user) {
+        $query = "INSERT INTO Users (username, passwordSalt, passwordHash, roleId, avatarToken) VALUES (:username, :passwordSalt, :passwordHash, :roleId, :avatarToken)";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([
+                ':username' => $user->username,
+                ':passwordSalt' => $user->passwordSalt,
+                ':passwordHash' => $user->passwordHash,
+                ':roleId' => $user->roleId,
+                ':avatarToken' => $user->avatarToken
+            ]);
+        } catch (PDOException $e) {
+            error_log('PDO Exception at insertUser(): ' . $e->getMessage());
+            throw $e;
+        }
+        return $this->conn->lastInsertId();
+    }
+
+    //POLL RELATED METHODS
 
     /**
      * Retrieves a poll by its ID.
      *
      * @param int $id The ID of the poll to retrieve.
      * @return Poll|null The Poll object corresponding to the given ID.
-     * @throws InvalidArgumentException If the provided ID is not a positive integer.
-     * @throws Exception If there is an error while fetching the poll from the database.
+     * @throws InvalidArgumentException If the provided ID is not a valid integer.
+     * @throws PDOException If there is an error executing the database query.
      */
     public function getPollById(int $id) {
         if (!is_int($id) || $id <= 0) {
@@ -205,10 +337,9 @@ class Repository {
             }
             return new Poll($result["id"], $result["title"], $result["description"], $result["question"], $result["pollTypeCode"], $result['responses'], $result["created"], $result["createdBy"], $result['createdByUsername'], $result["modified"], $result["modifiedBy"], $result['modifiedByUsername']);
         } catch (PDOException $e) {
-            error_log('PDO Exception occurred: ' . $e->getMessage());
-            throw new Exception('Unable to fetch poll at this time.');
+            error_log('PDO Exception at getPollById(): ' . $e->getMessage());
+            throw $e;
         }
-        return null;
     }
 
     /**
@@ -217,13 +348,14 @@ class Repository {
      * @param int $limit The maximum number of polls to retrieve. Default is 10.
      * @param int $offset The number of polls to skip before starting to retrieve. Default is 0.
      * @param string $order Column name to order by. Default is id.
+     * @param string $filter Additional SQL condition.
      * @return array|null An array of Poll objects if successful, or null if no polls are found or an error occurs.
      * @throws InvalidArgumentException If the provided limit or offset are invalid.
-     * @throws Exception If there is an error executing the query.
+     * @throws PDOException If there is an error executing the database query.
      */
     public function getPolls(int $limit = 10, int $offset = 0, string $filter = "1=1", string $order = "id"){
-        if (!is_int($limit) || !is_int($offset) || $offset < 0 || $limit < 0) {
-            throw new InvalidArgumentException('Invalid poll limit or offset');
+        if ($limit <= 0 || $offset <= 0) {
+            throw new InvalidArgumentException('Invalid limit or offset');
         }
         $query = "SELECT * FROM vPolls WHERE $filter ORDER BY $order LIMIT :limit OFFSET :offset";
         
@@ -239,10 +371,9 @@ class Repository {
             }, $results);
             return $polls;
         } catch (PDOException $e) {
-            error_log('PDO Exception occurred: ' . $e->getMessage());
-            throw new Exception('Unable to fetch polls at this time.');
+            error_log('PDO Exception at getPolls(): ' . $e->getMessage());
+            throw $e;
         }
-        return null;
     }
 
     /**
@@ -251,10 +382,10 @@ class Repository {
      * @param int $pollId The ID of the poll.
      * @return array|null An array of PollOption objects representing the poll options or null if no polls are found or an error occurs.
      * @throws InvalidArgumentException If the provided poll ID is not a positive integer.
-     * @throws Exception If there is an error while fetching poll options from the database.
+     * @throws PDOException If there is an error executing the database query.
      */
     public function getPollOptionsByPollId(int $pollId) {
-        if (!is_int($pollId) || $pollId <= 0) {
+        if ($pollId <= 0) {
             throw new InvalidArgumentException('Invalid poll ID');
         }
 
@@ -273,22 +404,22 @@ class Repository {
             return $pollOptions;
 
         } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to fetch poll options at this time.');
+            error_log('PDO Exception at getPollOptionsByPollId(): ' . $e->getMessage());
+            throw $e;
         }
-        return null;
     }
 
     /**
      * Retrieves votes associated with a specific poll ID.
+     * This method is not implemented yet!
      *
      * @param int $pollId The ID of the poll for which votes are to be retrieved.
      * @return array|null An array of Vote objects if votes are found, null otherwise.
      * @throws InvalidArgumentException If the provided poll ID is not a positive integer.
-     * @throws Exception If there is an error while fetching votes from the database.
+     * @throws PDOException If there is an error executing the database query.
      */
     public function getVotesByPollId(int $pollId) {
-        if (!is_int($pollId) || $pollId <= 0) {
+        if ($pollId <= 0) {
             throw new InvalidArgumentException('Invalid poll ID');
         }
 
@@ -308,66 +439,17 @@ class Repository {
 
         } catch (PDOException $e) {
             error_log('PDO Exception occurred: ' . $e->getMessage());
-            throw new Exception('Unable to fetch votes at this time.');
-        }
-        return null;
-    }
-
-    public function getUsernameAvailability(string $username) {
-        if (!is_string($username) || empty($username)) {
-            throw new InvalidArgumentException('Invalid username');
-        }
-
-        $query = "SELECT COUNT(id) AS count FROM Users WHERE username = :username";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':username' => $username]);
-            return $stmt->fetch()['count'];
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to check username availability at this time.');
-        }
-    }
-
-    public function insertUser(User $user) {
-        $query = "INSERT INTO Users (username, passwordSalt, passwordHash, roleId, avatarToken) VALUES (:username, :passwordSalt, :passwordHash, :roleId, :avatarToken)";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([
-                ':username' => $user->username,
-                ':passwordSalt' => $user->passwordSalt,
-                ':passwordHash' => $user->passwordHash,
-                ':roleId' => $user->roleId,
-                ':avatarToken' => $user->avatarToken
-            ]);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
             throw $e;
         }
-        return $this->conn->lastInsertId();
     }
 
-    public function getRolebyId(int $id) {
-        if (!is_int($id) || $id <= 0) {
-            throw new InvalidArgumentException('Invalid role ID');
-        }
-
-        $query = "SELECT * FROM role WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':id' => $id]);
-            $result = $stmt->fetch();
-            return new Role($result['id'], $result['name'], $result['created'], $result['modified']);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to fetch role at this time.');
-        }
-        return null;
-    }
-
+    /**
+     * Inserts a new poll into the database.
+     *
+     * @param Poll $poll An instance of the Poll class containing details.
+     * @return int The ID of the newly inserted poll.
+     * @throws PDOException If the insertion fails.
+     */
     public function insertPoll(Poll $poll) {
         $query = "INSERT INTO Polls (title, description, question, createdBy) VALUES (:title, :description, :question, :createdBy)";
 
@@ -386,6 +468,12 @@ class Repository {
         }
     }
 
+    /**
+     * Inserts a batch of pollOptions into the database.
+     *
+     * @param array $pollOptions An array of instances of the PollOptions class containing pollOptions details.
+     * @throws PDOException If the insertion fails.
+     */
     public function insertPollOptions(array $pollOptions) {
         $query = "INSERT INTO PollOptions (pollId, optionValue) VALUES ";
         
@@ -398,7 +486,6 @@ class Repository {
         }
         
         $query .= implode(", ", $values);
-        error_log($query);
 
         try {
             $stmt = $this->conn->prepare($query);
@@ -409,6 +496,13 @@ class Repository {
         }
     }
 
+    /**
+     * Inserts a new vote into the database.
+     *
+     * @param vote $vote An instance of the Vote class containing vote details.
+     * @return int The ID of the newly inserted vote.
+     * @throws PDOException If the insertion fails.
+     */
     public function insertVote(Vote $vote) {
         $query = "INSERT INTO Votes (pollId, pollOptionId, createdBy) VALUES (:pollId, :pollOptionId, :userId)";
 
@@ -425,161 +519,6 @@ class Repository {
         }
     }
 
-    public function updateUser(User $user) {
-        $query = "UPDATE Users SET username = :username, passwordHash = :passwordHash, roleId = :roleId WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([
-                ':username' => $user->username,
-                ':passwordHash' => $user->passwordHash,
-                ':roleId' => $user->roleId,
-                ':id' => $user->id
-            ]);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    public function updatePoll(Poll $poll) {
-        $query = "UPDATE poll SET question = :question, title = :title, description = :description WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([
-                ':question' => $poll->question,
-                ':title' => $poll->title,
-                ':description' => $poll->description,
-                ':id' => $poll->id
-            ]);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to update poll at this time.');
-        }
-    }
-
-    public function updatePollOptions(array $pollOptions) {
-        $query = "UPDATE poll_option SET option_text = CASE id ";
-        $ids = [];
-
-        foreach ($pollOptions as $option) {
-            $query .= "WHEN ? THEN ? ";
-            $ids[] = $option->id;
-            $ids[] = $option->optionText;
-        }
-
-        $query .= "END WHERE id IN (" . implode(',', array_fill(0, count($pollOptions), '?')) . ")";
-        
-        error_log("Trying to execute query: " . $query);
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute(array_merge($ids, array_column($pollOptions, 'id')));
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to update poll options at this time.');
-        }
-    }
-
-    public function softDeleteUser(int $id) {
-        if (!is_int($id) || $id <= 0) {
-            throw new InvalidArgumentException('Invalid user ID');
-        }
-
-        $query = "UPDATE Users SET deleted = 1 WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':id' => $id]);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to delete user at this time.');
-        }
-    }
-
-    public function softDeletePoll(int $id) {
-        if (!is_int($id) || $id <= 0) {
-            throw new InvalidArgumentException('Invalid poll ID');
-        }
-
-        $query = "UPDATE poll SET deleted = 1 WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':id' => $id]);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to delete poll at this time.');
-        }
-    }
-
-    public function deletePoll(int $id) {
-        if (!is_int($id) || $id <= 0) {
-            throw new InvalidArgumentException('Invalid poll ID');
-        }
-
-        $queryMain = "DELETE FROM poll_option WHERE poll_id = :id";
-        $queryForeign = "DELETE FROM polls WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($queryMain);
-            $stmt->execute([':id' => $id]);
-
-            $stmt = $this->conn->prepare($queryForeign);
-            $stmt->execute([':id' => $id]);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to delete poll at this time.');
-        }
-    }
-
-    public function deleteUser(int $id) {
-        if (!is_int($id) || $id <= 0) {
-            throw new InvalidArgumentException('Invalid user ID');
-        }
-
-        $query = "DELETE FROM Users WHERE id = :id";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':id' => $id]);
-        } catch (PDOException $e) {
-            error_log('PDO Exception occured: ' . $e->getMessage());
-            throw new Exception('Unable to delete user at this time.');
-        }
-
-    }
-
-    /**
-     * Checks whether a user has already voted in a poll.
-     *
-     * @param int $userId The ID of the user.
-     * @param int $pollId The ID of the poll.
-     * @return bool True if the user has already voted, false otherwise.
-     * @throws InvalidArgumentException If the provided user ID or poll ID are not positive integers.
-     * @throws Exception If there is an error while checking the vote in the database.
-     */
-    public function getUserVote(int $userId, int $pollId) {
-        if (!is_int($userId) || $userId <= 0 || !is_int($pollId) || $pollId <= 0) {
-            throw new InvalidArgumentException('Invalid user ID or poll ID');
-        }
-
-        $query = "SELECT pollOptionId FROM Votes WHERE createdBy = :userId AND pollId = :pollId";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':userId' => $userId, ':pollId' => $pollId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            if($result !== false){
-                return $result['pollOptionId'];
-            }
-            return $result;
-        } catch (PDOException $e) {
-            error_log('PDO Exception occurred: ' . $e->getMessage());
-            throw new Exception('Unable to check vote status at this time.');
-        }
-    }
 }
 
 if(isset($pdo)) {
@@ -587,5 +526,4 @@ if(isset($pdo)) {
 } else {
 header("Location: /~kindlma7/PollGate/error.php?code=leaf");
 }
-
 ?>
