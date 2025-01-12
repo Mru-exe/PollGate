@@ -64,6 +64,13 @@ if($userId > 0){
             echo '<span class="title">Personal statistics: </span>';
             echo '<span>You created: ' . $stats['polls'] . ' polls</span>';
             echo '<span>You voted: ' . $stats['votes'] . ' times</span>';
+            echo '</div><div class="user-stats">';
+            echo '<span class="title">Repository statistics: </span>';
+            //TODO: napojit na LOC API
+            echo '<span>1249* lines of PHP</span>';
+            echo '<span>583* lines of JavaScript</span>';
+            echo '<span>264* lines of CSS</span>';
+            echo '<span class="helper">*without comments</span>';
             echo '</div>';
         } else {
             echo '<div class="container-flex-col blocker">';

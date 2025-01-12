@@ -1,8 +1,4 @@
 <?php
-//TODO: Set permission of the file to 600
-//TODO: Fix QUERIES to match new database
-//TODO: GET USER STATS
-
 //Include entity classes
 require_once "models/User.php";
 require_once "models/Role.php";
@@ -354,7 +350,7 @@ class Repository {
      * @throws PDOException If there is an error executing the database query.
      */
     public function getPolls(int $limit = 10, int $offset = 0, string $filter = "1=1", string $order = "id"){
-        if ($limit <= 0 || $offset <= 0) {
+        if ($limit <= 0 || $offset < 0) {
             throw new InvalidArgumentException('Invalid limit or offset');
         }
         $query = "SELECT * FROM vPolls WHERE $filter ORDER BY $order LIMIT :limit OFFSET :offset";

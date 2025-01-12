@@ -16,9 +16,8 @@
     <div class="header-title">
         <img src="public/assets/img/pollgate-icon.svg" height="32" width="32" alt="PollGate icon">
         <a class="silent bold" id="home-anchor" href="/~kindlma7/PollGate/index.php">PollGate</a>
-        |
         <a class="silent" href="/~kindlma7/PollGate/docs.php">Docs</a>
-        <?php if(isset($_SESSION["user-role-id"]) && $_SESSION["user-role-id"] < 2){ echo '| <a class="silent" href="admin.php">Admin Panel</a>'; } ?>
+        <?php if(isset($_SESSION["user-role-id"]) && $_SESSION["user-role-id"] < 2){ echo ' <a class="silent" href="admin.php">Admin Panel</a>'; } ?>
     </div>
     <?php
     if(isset($_SESSION["user-id"])){

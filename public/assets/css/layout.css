@@ -9,6 +9,9 @@
     --std-padding: 12px;
     font-family: "Sora", sans-serif;
 }
+@media print {
+    
+}
 
 span.errmsg {
     margin: 10px 0px 10px 0px;
@@ -101,6 +104,22 @@ main#index {
         flex-direction: column;
         gap: var(--std-padding);
     }
+}
+@media print {
+    main#index {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: var(--std-padding);
+    }
+    div#recent-polls {
+        grid-column: span 2;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        /* justify-content: space-between; */
+        padding: var(--std-padding);
+    } 
 }
 
 /* DIV LAYOUT */
@@ -296,6 +315,15 @@ footer.default-footer {
     padding: calc(var(--std-padding)) var(--std-padding) calc(var(--std-padding)) var(--std-padding);
     margin-top: var(--std-padding);
 }
+@media print {
+    header.default-header {
+        box-shadow: none;
+    }
+    footer.default-footer {
+        box-shadow: none;
+    }
+}
+
 div.header-title {
     flex-grow: 1;
     display: flex;
@@ -352,6 +380,11 @@ a.centered {
     border: none;
     border-radius: var(--border-radius);
     transition: all 0.2s ease-in-out;
+}
+@media print {
+    .btn {
+        display: none;
+    }
 }
 .btn:active, .btn-icon:active {
     transform: scale(1.05);    
@@ -607,4 +640,10 @@ input[type="radio"]:checked, input[type="checkbox"]:checked {
 }
 input[type="radio"][disabled]{
     filter: opacity(0.5);
+}
+
+@media print {
+    div.header-title a:not(#home-anchor), header.default-header > a{
+        display: none;
+    }
 }
