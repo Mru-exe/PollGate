@@ -18,7 +18,6 @@ function evalError(inputId, errorMessage, isError){
 //Gets all form inputs and if they exist add an event listener
 if (defaultForm != null) {
     document.querySelectorAll('input, textarea').forEach(field => {
-        console.log("Dasda");
         if (field.getAttribute("required") != null) {
             field.addEventListener('blur', () => {
                 field.value.trim() === '' ? evalError(field.id, "This field is required.", true) : evalError(field.id, null, false);

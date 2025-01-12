@@ -10,6 +10,7 @@ $recentPolls = $db->getPolls(3, 0, "1=1", "created DESC");
 $userId = isset($_SESSION["user-id"]) ? $_SESSION["user-id"] : 0;
 if($userId > 0){
     $user = $db->getUserById($userId);
+    $stats = $db->getUserStats($userId);
 }
 
 //TODO: EDIT PROFILE
@@ -56,13 +57,13 @@ if($userId > 0){
         <?php
         if($userId > 0) {
             echo '<div class="user-profile">';
-            echo '<img class="avatar" alt="User Avatar" height="64" width="64" src="public/assets/avatars/2x@' . $_SESSION["avatarToken"] . '">';
+            echo '<img class="avatar" alt="User Avatar" height="64" width="64" src="public/assets/avatars/2x@' . $_SESSION["avatar-token"] . '">';
             echo '<span>' . htmlspecialchars($user->username) . '</span><span class="helper">Joined ' . date_format($user->created, "m/d/Y") . '</span>';
             echo '<div class="user-actions"><a href="edit-profile.php" class="btn bg-grey"><i class="fa-solid fa-user-pen"></i> Edit Profile</a><a href="new.php" class="btn bg-blue"><i class="fa-solid fa-plus"></i> Create New Poll</a></div>';
             echo '</div><div class="user-stats">';
             echo '<span class="title">Personal statistics: </span>';
-            echo '<span>You created: ' . 'polls</span>';
-            echo '<span>You voted: ' . 'times</span>';
+            echo '<span>You created: ' . $stats['polls'] . ' polls</span>';
+            echo '<span>You voted: ' . $stats['votes'] . ' times</span>';
             echo '</div>';
         } else {
             echo '<div class="container-flex-col blocker">';

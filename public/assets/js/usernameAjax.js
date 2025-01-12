@@ -11,7 +11,7 @@ document.getElementById("username").addEventListener("keyup", (e) => {
 function checkUsername() {
     let username = document.getElementById("username");
     let errMsg = document.getElementById("username-error");
-    if (username.value != "" && username.value.length >= 3) { 
+    if (username.value != "" && username.value.length >= 3 && username.value != username.getAttribute("data-currentUsername")){ 
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "api/checkUsername.php", true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -20,13 +20,15 @@ function checkUsername() {
                 evalError("username", "Username is already taken", 1)
                 username.setAttribute("data-overrideErrors", "true");
             } else {
-                evalError("username", "", 0)
                 username.setAttribute("data-overrideErrors", "false");
+                evalError("username", "", 0)
             }
         }
         xhr.send(`username=${username.value}`);
-    }
-    else {
+    }else if (username.value == username.getAttribute("data-currentUsername")) {
+        username.setAttribute("data-overrideErrors", "false");
+        evalError("username", "", 0)
+    }else{
         errMsg.textContent = "";
     }
 }

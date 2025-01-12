@@ -53,7 +53,7 @@ function login($username, $password) {
         $_SESSION["user-id"] = $user->id;
         $_SESSION["username"] = $user->username;
         $_SESSION["user-role-id"] = $user->roleId;
-        $_SESSION["avatarToken"] = $user->avatarToken;
+        $_SESSION["avatar-token"] = $user->avatarToken;
         return true;
     } else {
         return false;
@@ -128,7 +128,7 @@ function register($username, $password, $image = false){
             $_SESSION["user-id"] = $userId;
             $_SESSION["username"] = $username;
             $_SESSION["user-role-id"] = $newUser->roleId;
-            $_SESSION["avatarToken"] = $newUser->avatarToken;
+            $_SESSION["avatar-token"] = $newUser->avatarToken;
             return true;
         }
     } catch (PDOException $e) {
@@ -216,4 +216,41 @@ function loginValidation($username, $password) {
         return "Invalid username or password.";
     }
     return "";
+}
+
+/**
+ * Validates and updates the user's profile information.
+ *
+ * @param User $user The user object to be updated.
+ * @param string|null $username The new username, or null to keep the current username.
+ * @param string|null $pw The new password, or null to keep the current password.
+ * @param string|null $confpw The confirmation of the new password, or null to keep the current password.
+ * @param array|null $avatar The new avatar image data, or null to keep the current avatar.
+ * 
+ * @return bool|User Returns false if no updates are provided, otherwise returns the updated user object.
+ */
+function validateProfileUpdate(User $user, string $username = null, string $pw = null, string $confpw = null, array|null $avatar = null){
+    if (!isset($username) && !isset($pw) && !isset($confpw) && !isset($avatar)) {
+        return false;
+    }
+    $user->username = isset($username) ? $username : $user->username;
+
+    if (isset($pw) && isset($confpw) && $pw === $confpw) {
+        var_dump($pw);
+        $user->passwordHash = hash('sha256', $user->passwordSalt.$pw, false);
+    }
+    if (isset($avatar)) {
+        $avatarResized = resizeImage($avatar, 32, 32);
+        $avatarResized2x = resizeImage($avatar, 64, 64);
+        $filename = bin2hex(random_bytes(16));
+        $oldAvatarToken = $user->avatarToken;
+        if ($oldAvatarToken !== "defaultAvatar.png") {
+            unlink("public/assets/avatars/$oldAvatarToken");
+            unlink("public/assets/avatars/2x@$oldAvatarToken");
+        }
+        $user->avatarToken = saveFile($avatarResized, $filename);
+        saveFile($avatarResized2x, $filename, "2x@");
+    }
+    $user->modified = new DateTime();
+    return $user;
 }

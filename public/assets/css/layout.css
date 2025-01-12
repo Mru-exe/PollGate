@@ -74,7 +74,7 @@ main#error {
     background-color: aliceblue;
     padding: 25px 25px 25px 25px;
 }
-main#login, main#register{
+main#login, main#register, main#edit-profile{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -419,7 +419,7 @@ img.avatar-lg {
 /* FORM ELEMENTS */
 label {
     font-size: 1em;
-    min-width: 250px;
+    min-width: 300px;
 }
 input[type="text"], input[type="password"], textarea {
     font-size: 1em;
@@ -474,6 +474,7 @@ form.default label, form#new-form label {
     align-self: self-start;
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 input[type="file"]{
     display: none;

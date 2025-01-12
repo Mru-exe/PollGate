@@ -24,7 +24,7 @@
     if(isset($_SESSION["user-id"])){
         echo '<a class="silent centered bold" href="/~kindlma7/PollGate/profile.php">';
         echo htmlspecialchars($_SESSION["username"]);
-        echo '&nbsp;<img class="avatar" alt="User Avatar" height="32" width="32" src="public/assets/avatars/' . $_SESSION["avatarToken"] . '">';
+        echo '&nbsp;<img class="avatar" alt="User Avatar" height="32" width="32" src="public/assets/avatars/' . $_SESSION["avatar-token"] . '">';
         echo '</a>';
         echo '<a class="silent" href="/~kindlma7/PollGate/api/logout.php"><i class="fa-solid fa-sign-out"></i></a>';
     } else {
