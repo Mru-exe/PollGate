@@ -1,3 +1,4 @@
 logs/
 db.sql
 public/assets/avatars
+.github_access_token
